@@ -17,6 +17,8 @@
 *   This board enables controling hardware elements such as motors, sensors, etc.. 
 *    (optimized to LEGO motors).
 *
+*    Arduino Board: esp32_bluepad32 ESP32 Dev Module
+*
 *	History:\n
 *
 */
