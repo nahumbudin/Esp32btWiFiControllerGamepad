@@ -17,6 +17,8 @@
 *   This board enables controling hardware elements such as motors, sensors, etc.. 
 *    (optimized to LEGO motors).
 *
+*   Arduino Board: esp32_bluepad32 ESP32 Dev Module
+*
 *	History:\n
 *
 */
@@ -57,7 +59,7 @@ volatile bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
 // FreeRTOS Synchronization Mutex Primitive
-SemaphoreHandle_t xStateMutex = NULL;
+//SemaphoreHandle_t xStateMutex = NULL;
 
 HardwareControl *hw_control;
 
@@ -92,8 +94,8 @@ void control_task(void *pvParameters) {
         if (xQueueReceive(rx_commands_queue, &new_command, xInterval) == pdPASS) {
             // Data arrived before the 50ms window closed!
             do {            
-                printf("New Command Received: %i Param: %i.\n", new_command.command, new_command.param);
-                // Process command...
+                //printf("New Command Received: %i Param: %i.\n", new_command.command, new_command.param);
+                hw_control->Commands_Processor(new_command.command, new_command.param);
             } while (xQueueReceive(rx_commands_queue, &new_command, 0) == pdPASS); // drain all
 
         } else {

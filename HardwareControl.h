@@ -43,6 +43,30 @@
 #define SERVO_CH7  6
 #define SERVO_CH8  7
 
+// DRAGON Wierless Controller for PS4 Controls Buttons Mapping
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_X					1
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_O					2
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_SQUARE		8
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_TRIANGLE	16
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_L1				64
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_R1				128
+
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_HIGH_TRIGGER_L	1
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_HIGH_TRIGGER_R	2
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_HIGH_SHARE			4
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_HIGH_OPTION			8
+#define WIRELESS_CONTROLLER_PS4_BUTTOMS_HIGH_HOME				16
+
+// DRAGON Wierless Controller for PS4 Controls DPAD Mapping
+#define WIRELESS_CONTROLLER_PS4_DPAD_UP								0
+#define WIRELESS_CONTROLLER_PS4_DPAD_UP_RIGHT					1
+#define WIRELESS_CONTROLLER_PS4_DPAD_RIGHT						2
+#define WIRELESS_CONTROLLER_PS4_DPAD_RIGHT_DOWN				3
+#define WIRELESS_CONTROLLER_PS4_DPAD_DOWN							4
+#define WIRELESS_CONTROLLER_PS4_DPAD_LEFT_DOWN				5
+#define WIRELESS_CONTROLLER_PS4_DPAD_LEFT							6
+#define WIRELESS_CONTROLLER_PS4_DPAD_UP_LEFT					7
+#define WIRELESS_CONTROLLER_PS4_DPAD_NONE							8
 
 class HardwareControl {
 	
@@ -64,6 +88,8 @@ class HardwareControl {
 		~HardwareControl();
 		
 		static HardwareControl *get_instance();
+
+		void Commands_Processor(int command, int param);
 		
 		// Safe control function specifically mapped for discrete LEGO steps
 		void Set_DC_Motor_Speed(motor_t motorID, int speed);

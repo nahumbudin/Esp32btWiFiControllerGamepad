@@ -12,7 +12,17 @@
 
 #include "BluePad32handlers.h"
 
-
+const uint8_t cmd_map[REPORT_SIZE] = {
+        UNI_GAMEPAD_MAPPINGS_AXIS_X,
+        UNI_GAMEPAD_MAPPINGS_AXIS_Y,
+        UNI_GAMEPAD_MAPPINGS_AXIS_RX,
+        UNI_GAMEPAD_MAPPINGS_AXIS_RY,
+        UNI_GAMEPAD_MAPPINGS_BUTTON_TRIGGER_L,
+        UNI_GAMEPAD_MAPPINGS_BUTTON_TRIGGER_R,
+        UNI_GAMEPAD_MAPPINGS_DPAD,
+        UNI_GAMEPAD_MAPPING_BUTTONS_L,
+        UNI_GAMEPAD_MAPPING_BUTTONS_H
+    };
 
 // This callback gets called any time a new gamepad is connected.
 // Up to 4 gamepads can be connected at the same time.
@@ -284,8 +294,9 @@ void processMouse(ControllerPtr ctl) {
 
 // Shared delta-filter helper used by BOTH Wi-Fi TCP and Bluepad32 modes
 void pushReportToQueue(const uint8_t* data, bool forceReset) {
-    constexpr size_t REPORT_SIZE = 9;
+    //constexpr size_t REPORT_SIZE = 9;
     static uint8_t prev[REPORT_SIZE] = {128, 128, 128, 128, 0, 0, 8, 0, 0};
+    /*
     static const uint8_t cmd_map[REPORT_SIZE] = {
         UNI_GAMEPAD_MAPPINGS_AXIS_X,
         UNI_GAMEPAD_MAPPINGS_AXIS_Y,
@@ -297,6 +308,7 @@ void pushReportToQueue(const uint8_t* data, bool forceReset) {
         UNI_GAMEPAD_MAPPING_BUTTONS_L,
         UNI_GAMEPAD_MAPPING_BUTTONS_H
     };
+    */
 
     if (forceReset) {
         memset(prev, 0xFF, REPORT_SIZE);

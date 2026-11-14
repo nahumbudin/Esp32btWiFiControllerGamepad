@@ -13,12 +13,15 @@
 #pragma once
 
 // Uncomment to turn gamepad debug print on
-#define GAMEPAD_DEBUG_PRINT_ON
+//#define GAMEPAD_DEBUG_PRINT_ON
 
 // Uncomment to turn gamepad mouse pad debug print on
-#define GAMEPAD_MOUSE_DEBUG_PRINT_ON
+//#define GAMEPAD_MOUSE_DEBUG_PRINT_ON
 
 #include <Bluepad32.h>
+
+const int REPORT_SIZE = 9;
+extern const uint8_t cmd_map[REPORT_SIZE];
 
 #define UNI_GAMEPAD_MAPPINGS_DPAD     100
 #define UNI_GAMEPAD_MAPPING_BUTTONS_L 101
