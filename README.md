@@ -1,7 +1,6 @@
-/**
-*	@file		Esp32btWiFiControllerGamepad.ino
-*	@author		Nahum Budin
-*	@date		1-Nov-2026
+Esp32btWiFiControllerGamepad.ino
+author		Nahum Budin
+date		1-Nov-2026
 *	@version	1.0 - Initial version
 *
 *	@brief	This sketch implements a BT interface to a Sony PS4 Gamepad, OR
