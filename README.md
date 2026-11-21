@@ -1,5 +1,5 @@
-Esp32btWiFiControllerGamepad.ino
-author		Nahum Budin
+Esp32btWiFiControllerGamepad.ino\n
+author		Nahum Budin\n
 date		1-Nov-2026
 *	@version	1.0 - Initial version
 *
