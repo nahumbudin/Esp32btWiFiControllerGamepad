@@ -25,6 +25,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include "DFRobot_URM09.h"
 
 #include <Bluepad32.h>
 #include "BluePad32handlers.h"
@@ -39,9 +40,12 @@
 
 #include "HardwareControl.h"
 
-//#define MODE_SELECT_PIN 4   // Connect to GND for Bluetooth mode, leave open (HIGH) 
+// Uncomment to test motors
+//#define TEST_MOTORS_EN
+
+#define MODE_SELECT_PIN 5   // Connect to GND for WiFi mode, leave open (HIGH) for BT mode
                             // for Wi-Fi mode
-bool isWifiMode = true;
+bool isWifiMode = false;
 
 void control_task(void *pvParameters);
 
@@ -55,6 +59,12 @@ void control_task(void *pvParameters);
 #define UNI_GAMEPAD_MAPPING_BUTTONS_L 101
 #define UNI_GAMEPAD_MAPPING_BUTTONS_H 102
 
+int16_t dist = 2; // Distance in cm
+int16_t prev_dist = 2;     
+float temp = 20.0f;    // Temperature in °C
+float prev_temp = 20.0f;
+int us_dist_meas_cycle_count = 0;
+
 volatile bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
@@ -62,6 +72,8 @@ bool oldDeviceConnected = false;
 //SemaphoreHandle_t xStateMutex = NULL;
 
 HardwareControl *hw_control;
+
+DFRobot_URM09 URM09; // US Distance sensor
 
 // Global queue to pass rx commands and parameters to the HW control tasks.
 QueueHandle_t rx_commands_queue = NULL;
@@ -115,9 +127,26 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  //pinMode(MODE_SELECT_PIN, INPUT_PULLUP);
-  //delay(10);
-  //isWifiMode = (digitalRead(MODE_SELECT_PIN) == HIGH);
+  // Initialize I2C on default ESP32 pins (SDA = 21, SCL = 22)
+  Wire.begin(21, 22);
+  Wire.setClock(400000);
+
+  // Initialize US distance sensor at default I2C address (0x11)
+  while (!URM09.begin(0x11)) {
+    Serial.println("SEN0304 not found! Check wiring and I2C pins.");
+    delay(1000);
+  }
+
+  // Configure mode and maximum range:
+  // Modes:  MEASURE_MODE_PASSIVE or MEASURE_MODE_AUTOMATIC
+  // Ranges: MEASURE_RANG_150, MEASURE_RANG_300, or MEASURE_RANG_500
+  URM09.setModeRange(MEASURE_MODE_PASSIVE, MEASURE_RANG_150);
+  delay(100);
+
+    // Mode select input pin
+  pinMode(MODE_SELECT_PIN, INPUT_PULLUP);
+  delay(10);
+  isWifiMode = (digitalRead(MODE_SELECT_PIN) == LOW);
 
   rx_commands_queue = xQueueCreate(128, sizeof(rx_command_t));
   if (rx_commands_queue == NULL) {
@@ -190,6 +219,13 @@ void setup() {
 void loop() {
     constexpr size_t REPORT_SIZE = 9;
     static uint8_t prev[REPORT_SIZE] = {128, 128, 128, 128, 0, 0, 8, 0, 0};
+
+#ifdef TEST_MOTORS_EN
+    static int loop_count = 0;
+    static int iteration_count = 0;
+    static int direction = 1;
+#endif
+
     static const uint8_t cmd_map[REPORT_SIZE] = 
     {
         UNI_GAMEPAD_MAPPINGS_AXIS_X,
@@ -204,6 +240,8 @@ void loop() {
     };
 
     static bool wasConnected = false;
+
+
 
     if (isWifiMode)
     {
@@ -263,9 +301,76 @@ void loop() {
         bool dataUpdated = BP32.update();
         if (dataUpdated)
             processControllers();
-    }    
+    } 
+
+#ifdef TEST_MOTORS_EN
+    if (loop_count == 0)
+    {
+        hw_control->Set_DC_Motor_Speed(hw_control->dc_motors[0], direction * 200);
+        hw_control->Set_DC_Motor_Speed(hw_control->dc_motors[1], direction * 200);
+        hw_control->Set_DC_Motor_Speed(hw_control->dc_motors[2], direction * 200);
+        hw_control->Set_DC_Motor_Speed(hw_control->dc_motors[3], direction * 200);
+        direction *= -1;
+    }
+
+    loop_count++;
+    if (loop_count >= 400)
+    {
+        loop_count = 0;
+        iteration_count++;
+        printf("Iteration: %i  Direction: %i\n", iteration_count, direction);
+    }
+
+
+    if (iteration_count >= 5)
+    {
+        direction = 0;
+    }
+#endif
+
+    // Test Hall sensor inputdebug
+    int hall_read = hw_control->Read_Steering_Hall_Sensor_Input(0.1);
+    //printf("Steering Hall Sensor Input: %i\n", hall_read);
+
+    // Trigger a measurement (required only in MEASURE_MODE_PASSIVE)
+  us_dist_meas_cycle_count++;
+  if (us_dist_meas_cycle_count >= 10)
+  {
+    // 10 * 25 = 0.25sec
+    URM09.measurement();
+    us_dist_meas_cycle_count = 0;
+  }
+
+    delay(25);
+
+    if (us_dist_meas_cycle_count == 0)
+    {
+        dist = URM09.getDistance();     // Distance in cm
+        temp = URM09.getTemperature();    // Temperature in °C
+    }
+
+    if ((dist != prev_dist) || (temp != prev_temp))
+    {
+        //Serial.print("Distance: ");
+        //Serial.print(dist);
+        //Serial.print(" cm | Temp: ");
+        //Serial.print(temp, 1);
+        //Serial.println(" °C");
+
+        rx_command_t cmd;
+        cmd.safety_stop = false;
+        cmd.command = US_SENSOR_DISTANCE;
+        cmd.param = dist;
+        xQueueSend(rx_commands_queue, &cmd, 0);
+
+        cmd.safety_stop = false;
+        cmd.command = US_SENSOR_TEMP;
+        cmd.param = (int)temp;
+        xQueueSend(rx_commands_queue, &cmd, 0);
     
-    delay(5);
+        prev_dist = dist;
+        prev_temp = temp;
+    }
 }
 
 

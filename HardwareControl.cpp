@@ -64,6 +64,10 @@ HardwareControl::HardwareControl()
   {
       this->Stop_DC_Motor(dc_motors[m]);
   }
+
+	// Set ADC for Steering Hall Effect sensor analog input.
+  analogReadResolution(12);       // 0 to 4095
+  analogSetAttenuation(ADC_11db); // Full 0V - 3.3V range
 	
 	
 }
@@ -84,6 +88,24 @@ void HardwareControl::Commands_Processor(int command, int param)
 		#ifdef COMMANDS_PROC_DEBG_PRT_ON
 		printf("Axis X %i\n", param);
 		#endif
+
+		// Steering
+		if (param != prev_x_axis_val)
+		{
+			int speed = (param - 128) * 2; // TODO: check direction
+			if ((speed > 3) || (speed < -3))
+			{
+				Set_DC_Motor_Speed(dc_motors[1], speed);
+			}
+			else
+			{
+				Set_DC_Motor_Speed(dc_motors[1], 0);
+			}
+
+			prev_x_axis_val = param;
+
+			printf("Axis X Speed: %i\n", speed);
+		}
 	}
 
 	// Use ifs as more than one button may be pressed
@@ -93,6 +115,7 @@ void HardwareControl::Commands_Processor(int command, int param)
 		#ifdef COMMANDS_PROC_DEBG_PRT_ON
 		printf("Axis Y %i\n", param);
 		#endif
+
 	}
 
 	if (command == cmd_map[2])
@@ -109,6 +132,30 @@ void HardwareControl::Commands_Processor(int command, int param)
 		#ifdef COMMANDS_PROC_DEBG_PRT_ON
 		printf("Axis RY %i\n", param);
 		#endif
+
+		// Drive Speed
+		if (param != prev_ry_axis_val)
+		{
+			int speed = (param - 128) * 2; // TODO: check direction
+
+			if (front_dist <= MIN_FRONT_DISTANCE)
+			{
+				speed = 0;
+			}
+
+			if ((speed > 3) || (speed < -3))
+			{
+				Set_DC_Motor_Speed(dc_motors[0], speed);
+			}
+			else
+			{
+				Set_DC_Motor_Speed(dc_motors[0], 0);
+			}
+
+			prev_ry_axis_val = param;
+
+			printf("Axis RY Speed: %i\n", speed);
+		}
 	}
 
 	if (command == cmd_map[4])
@@ -234,6 +281,30 @@ void HardwareControl::Commands_Processor(int command, int param)
       // ACTION PLACEHOLDER: Home pressed
     }
 	}
+
+	if (command == cmd_map[9])
+	{
+		// Distance
+		#ifdef COMMANDS_PROC_DEBG_PRT_ON
+		printf("Distance %i\n", param);
+		#endif
+
+		front_dist = param;
+
+		if (front_dist <= MIN_FRONT_DISTANCE)
+			{
+				Set_DC_Motor_Speed(dc_motors[0], 0);
+			}
+
+	}
+
+	if (command == cmd_map[10])
+	{
+		// Temp
+		#ifdef COMMANDS_PROC_DEBG_PRT_ON
+		printf("Temp %i\n", param);
+		#endif
+	}
 }
 
 // Safe control function specifically mapped for discrete LEGO steps
@@ -253,5 +324,37 @@ void HardwareControl::Set_DC_Motor_Speed(motor_t motorID, int speed) {
 void HardwareControl::Stop_DC_Motor(motor_t motorID)
 {
 	this->Set_DC_Motor_Speed(motorID, 0);
+}
+
+int HardwareControl::Read_Analog_Input(uint8_t input_pin)
+{
+	if ((input_pin == 12) || (input_pin == 14) || (input_pin == 15) || (input_pin == 17) ||
+		  (input_pin == 34) || (input_pin == 35) || (input_pin == 36) || (input_pin == 39))
+			{
+				return analogRead(input_pin);
+			}
+			else
+			{
+				return 0;
+			}
+}
+
+int HardwareControl::Read_Steering_Hall_Sensor_Input(float filter)
+{
+	int adc_read = 0;
+	static float filtered_output = 0;
+
+	adc_read = Read_Analog_Input(STEERING_HALL_SENS_ANALOG_IN_PIN);
+
+	if (filter == 0.f)
+	{ 
+		return adc_read;
+	}
+	else
+	{
+		filtered_output = (float)adc_read * filter + filtered_output * (1 - filter);
+
+		return (int)filtered_output;
+	}
 }
 

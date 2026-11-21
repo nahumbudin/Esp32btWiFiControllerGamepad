@@ -12,7 +12,7 @@
 
 #include "BluePad32handlers.h"
 
-const uint8_t cmd_map[REPORT_SIZE] = {
+const uint8_t cmd_map[COMMANDS_SIZE] = {
         UNI_GAMEPAD_MAPPINGS_AXIS_X,
         UNI_GAMEPAD_MAPPINGS_AXIS_Y,
         UNI_GAMEPAD_MAPPINGS_AXIS_RX,
@@ -21,7 +21,9 @@ const uint8_t cmd_map[REPORT_SIZE] = {
         UNI_GAMEPAD_MAPPINGS_BUTTON_TRIGGER_R,
         UNI_GAMEPAD_MAPPINGS_DPAD,
         UNI_GAMEPAD_MAPPING_BUTTONS_L,
-        UNI_GAMEPAD_MAPPING_BUTTONS_H
+        UNI_GAMEPAD_MAPPING_BUTTONS_H,
+        US_SENSOR_DISTANCE,
+        US_SENSOR_TEMP
     };
 
 // This callback gets called any time a new gamepad is connected.
@@ -109,6 +111,133 @@ void dumpMouse(ControllerPtr ctl) {
                    ctl->deltaY()        // (-511 - 512) left Y axis
     );
 	#endif
+}
+
+void processMouse(ControllerPtr ctl) {
+    static int32_t prev_delta_x = 0, prev_delta_y = 0;
+    int32_t delta_x = ctl->deltaX();
+    int32_t delta_y = ctl->deltaY();
+
+    if (delta_x != prev_delta_x)
+    {
+
+      prev_delta_x = delta_x;
+    }
+
+    if (delta_y != prev_delta_y)
+    {
+
+      prev_delta_y = delta_y;
+    }
+
+    // See "dumpMouse" for possible things to query.
+    dumpMouse(ctl);
+}
+
+// Shared delta-filter helper used by BOTH Wi-Fi TCP and Bluepad32 modes
+void pushReportToQueue(const uint8_t* data, bool forceReset) {
+    
+    static uint8_t prev[COMMANDS_SIZE] = {128, 128, 128, 128, 0, 0, 8, 0, 0, 5, 20};
+
+    if (forceReset) {
+        memset(prev, 0xFF, COMMANDS_SIZE);
+        return;
+    }
+
+    rx_command_t cmd;
+    cmd.safety_stop = false;
+    for (size_t i = 0; i < COMMANDS_SIZE; i++) {
+        if (data[i] != prev[i]) {
+            prev[i] = data[i];
+            cmd.command = cmd_map[i];
+            cmd.param = data[i];
+            xQueueSend(rx_commands_queue, &cmd, 0);
+        }
+    }
+}
+
+// Convert Bluepad32 D-Pad bitmask to Blugaemand 0..8 hat code
+uint8_t mapBp32DpadToHat(uint8_t dpad) {
+    bool up    = dpad & DPAD_UP;
+    bool down  = dpad & DPAD_DOWN;
+    bool left  = dpad & DPAD_LEFT;
+    bool right = dpad & DPAD_RIGHT;
+
+    if (up && right)   return 1; // NE
+    if (down && right) return 3; // SE
+    if (down && left)  return 5; // SW
+    if (up && left)    return 7; // NW
+    if (up)            return 0; // N
+    if (right)         return 2; // E
+    if (down)          return 4; // S
+    if (left)          return 6; // W
+    return 8;                    // Centered
+}
+
+// Convert Bluepad32 buttons into Blugaemand's 16-bit Linux HID button mask
+uint16_t mapBp32ButtonsToMask(ControllerPtr ctl) {
+    uint16_t mask = 0;
+    if (ctl->a())           mask |= 0x0001; // SOUTH (A / Cross)
+    if (ctl->b())           mask |= 0x0002; // EAST  (B / Circle)
+    if (ctl->x())           mask |= 0x0008; // NORTH (X / Triangle)
+    if (ctl->y())           mask |= 0x0010; // WEST  (Y / Square)
+    if (ctl->l1())          mask |= 0x0040; // L1 / LB
+    if (ctl->r1())          mask |= 0x0080; // R1 / RB
+    if (ctl->l2())          mask |= 0x0100; // L2 Digital
+    if (ctl->r2())          mask |= 0x0200; // R2 Digital
+    if (ctl->miscSelect())  mask |= 0x0400; // Select / Share / Minus
+    if (ctl->miscStart())   mask |= 0x0800; // Start / Options / Plus
+    if (ctl->miscSystem())  mask |= 0x1000; // Home / Guide
+    if (ctl->thumbL())      mask |= 0x2000; // L3
+    if (ctl->thumbR())      mask |= 0x4000; // R3
+    return mask;
+}
+
+void processGamepad(ControllerPtr ctl) {
+    constexpr size_t REPORT_SIZE = 9;
+		uint8_t report[REPORT_SIZE];
+
+    // 1. Convert Bluepad32 sticks (-512..511, center 0) -> 0..255 (center 128)
+    report[0] = (uint8_t)constrain((ctl->axisX()  + 512) >> 2, 0, 255);
+    report[1] = (uint8_t)constrain((ctl->axisY()  + 512) >> 2, 0, 255);
+    report[2] = (uint8_t)constrain((ctl->axisRX() + 512) >> 2, 0, 255);
+    report[3] = (uint8_t)constrain((ctl->axisRY() + 512) >> 2, 0, 255);
+
+    // 2. Convert Bluepad32 triggers (0..1023) -> 0..255
+    report[4] = (uint8_t)constrain(ctl->brake()    >> 2, 0, 255);
+    report[5] = (uint8_t)constrain(ctl->throttle() >> 2, 0, 255);
+
+    // 3. D-Pad hat (0..8)
+    report[6] = mapBp32DpadToHat(ctl->dpad());
+
+    // 4. 16-bit button bitmask split into Low & High bytes
+    uint16_t btnMask = mapBp32ButtonsToMask(ctl);
+    report[7] = (uint8_t)(btnMask & 0xFF);
+    report[8] = (uint8_t)((btnMask >> 8) & 0xFF);
+
+    pushReportToQueue(report);
+}
+
+void processControllers() {
+    for (auto ps_controller : ps_controllers) {
+        if (ps_controller && ps_controller->isConnected() && ps_controller->hasData()) {
+            if (ps_controller->isGamepad()) {
+                processGamepad(ps_controller);
+            } 
+            else if (ps_controller->isMouse()) {
+                processMouse(ps_controller);
+            } 
+            //else if (ps_controller->isKeyboard()) {
+            //    processKeyboard(ps_controller);
+            //} 
+            //else if (ps_controller->isBalanceBoard()) {
+            //    processBalanceBoard(ps_controller);
+            //} 
+            else {
+                Serial.println("Unsupported controller");
+            }
+        }
+    }
 }
 
 /*
@@ -270,146 +399,6 @@ void processGamepad(ControllerPtr ctl) {
 	dumpGamepad(ctl);
 }
 */
-
-void processMouse(ControllerPtr ctl) {
-    static int32_t prev_delta_x = 0, prev_delta_y = 0;
-    int32_t delta_x = ctl->deltaX();
-    int32_t delta_y = ctl->deltaY();
-
-    if (delta_x != prev_delta_x)
-    {
-
-      prev_delta_x = delta_x;
-    }
-
-    if (delta_y != prev_delta_y)
-    {
-
-      prev_delta_y = delta_y;
-    }
-
-    // See "dumpMouse" for possible things to query.
-    dumpMouse(ctl);
-}
-
-// Shared delta-filter helper used by BOTH Wi-Fi TCP and Bluepad32 modes
-void pushReportToQueue(const uint8_t* data, bool forceReset) {
-    //constexpr size_t REPORT_SIZE = 9;
-    static uint8_t prev[REPORT_SIZE] = {128, 128, 128, 128, 0, 0, 8, 0, 0};
-    /*
-    static const uint8_t cmd_map[REPORT_SIZE] = {
-        UNI_GAMEPAD_MAPPINGS_AXIS_X,
-        UNI_GAMEPAD_MAPPINGS_AXIS_Y,
-        UNI_GAMEPAD_MAPPINGS_AXIS_RX,
-        UNI_GAMEPAD_MAPPINGS_AXIS_RY,
-        UNI_GAMEPAD_MAPPINGS_BUTTON_TRIGGER_L,
-        UNI_GAMEPAD_MAPPINGS_BUTTON_TRIGGER_R,
-        UNI_GAMEPAD_MAPPINGS_DPAD,
-        UNI_GAMEPAD_MAPPING_BUTTONS_L,
-        UNI_GAMEPAD_MAPPING_BUTTONS_H
-    };
-    */
-
-    if (forceReset) {
-        memset(prev, 0xFF, REPORT_SIZE);
-        return;
-    }
-
-    rx_command_t cmd;
-    cmd.safety_stop = false;
-    for (size_t i = 0; i < REPORT_SIZE; i++) {
-        if (data[i] != prev[i]) {
-            prev[i] = data[i];
-            cmd.command = cmd_map[i];
-            cmd.param = data[i];
-            xQueueSend(rx_commands_queue, &cmd, 0);
-        }
-    }
-}
-
-// Convert Bluepad32 D-Pad bitmask to Blugaemand 0..8 hat code
-uint8_t mapBp32DpadToHat(uint8_t dpad) {
-    bool up    = dpad & DPAD_UP;
-    bool down  = dpad & DPAD_DOWN;
-    bool left  = dpad & DPAD_LEFT;
-    bool right = dpad & DPAD_RIGHT;
-
-    if (up && right)   return 1; // NE
-    if (down && right) return 3; // SE
-    if (down && left)  return 5; // SW
-    if (up && left)    return 7; // NW
-    if (up)            return 0; // N
-    if (right)         return 2; // E
-    if (down)          return 4; // S
-    if (left)          return 6; // W
-    return 8;                    // Centered
-}
-
-// Convert Bluepad32 buttons into Blugaemand's 16-bit Linux HID button mask
-uint16_t mapBp32ButtonsToMask(ControllerPtr ctl) {
-    uint16_t mask = 0;
-    if (ctl->a())           mask |= 0x0001; // SOUTH (A / Cross)
-    if (ctl->b())           mask |= 0x0002; // EAST  (B / Circle)
-    if (ctl->x())           mask |= 0x0008; // NORTH (X / Triangle)
-    if (ctl->y())           mask |= 0x0010; // WEST  (Y / Square)
-    if (ctl->l1())          mask |= 0x0040; // L1 / LB
-    if (ctl->r1())          mask |= 0x0080; // R1 / RB
-    if (ctl->l2())          mask |= 0x0100; // L2 Digital
-    if (ctl->r2())          mask |= 0x0200; // R2 Digital
-    if (ctl->miscSelect())  mask |= 0x0400; // Select / Share / Minus
-    if (ctl->miscStart())   mask |= 0x0800; // Start / Options / Plus
-    if (ctl->miscSystem())  mask |= 0x1000; // Home / Guide
-    if (ctl->thumbL())      mask |= 0x2000; // L3
-    if (ctl->thumbR())      mask |= 0x4000; // R3
-    return mask;
-}
-
-void processGamepad(ControllerPtr ctl) {
-    constexpr size_t REPORT_SIZE = 9;
-		uint8_t report[REPORT_SIZE];
-
-    // 1. Convert Bluepad32 sticks (-512..511, center 0) -> 0..255 (center 128)
-    report[0] = (uint8_t)constrain((ctl->axisX()  + 512) >> 2, 0, 255);
-    report[1] = (uint8_t)constrain((ctl->axisY()  + 512) >> 2, 0, 255);
-    report[2] = (uint8_t)constrain((ctl->axisRX() + 512) >> 2, 0, 255);
-    report[3] = (uint8_t)constrain((ctl->axisRY() + 512) >> 2, 0, 255);
-
-    // 2. Convert Bluepad32 triggers (0..1023) -> 0..255
-    report[4] = (uint8_t)constrain(ctl->brake()    >> 2, 0, 255);
-    report[5] = (uint8_t)constrain(ctl->throttle() >> 2, 0, 255);
-
-    // 3. D-Pad hat (0..8)
-    report[6] = mapBp32DpadToHat(ctl->dpad());
-
-    // 4. 16-bit button bitmask split into Low & High bytes
-    uint16_t btnMask = mapBp32ButtonsToMask(ctl);
-    report[7] = (uint8_t)(btnMask & 0xFF);
-    report[8] = (uint8_t)((btnMask >> 8) & 0xFF);
-
-    pushReportToQueue(report);
-}
-
-void processControllers() {
-    for (auto ps_controller : ps_controllers) {
-        if (ps_controller && ps_controller->isConnected() && ps_controller->hasData()) {
-            if (ps_controller->isGamepad()) {
-                processGamepad(ps_controller);
-            } 
-            else if (ps_controller->isMouse()) {
-                processMouse(ps_controller);
-            } 
-            //else if (ps_controller->isKeyboard()) {
-            //    processKeyboard(ps_controller);
-            //} 
-            //else if (ps_controller->isBalanceBoard()) {
-            //    processBalanceBoard(ps_controller);
-            //} 
-            else {
-                Serial.println("Unsupported controller");
-            }
-        }
-    }
-}
 
 
 

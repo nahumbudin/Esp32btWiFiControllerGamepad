@@ -20,12 +20,14 @@
 
 #include <Bluepad32.h>
 
-const int REPORT_SIZE = 9;
-extern const uint8_t cmd_map[REPORT_SIZE];
+const int COMMANDS_SIZE = 11;
+extern const uint8_t cmd_map[COMMANDS_SIZE];
 
 #define UNI_GAMEPAD_MAPPINGS_DPAD     100
 #define UNI_GAMEPAD_MAPPING_BUTTONS_L 101
 #define UNI_GAMEPAD_MAPPING_BUTTONS_H 102
+#define US_SENSOR_DISTANCE            103
+#define US_SENSOR_TEMP                104
 
 // Thread-safe Data Payload Structure
 typedef struct {

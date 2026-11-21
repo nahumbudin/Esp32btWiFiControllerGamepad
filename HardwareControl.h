@@ -15,18 +15,21 @@
 
 #pragma once
 
-
+//#include <encoder_motor.h>
+//#include "encoder_motor_lib.h"
 
 //#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
 
 // CRITICAL LEGO CHANGE: Set frequency to 1150 Hz instead of 50 Hz
-#define LEGO_FREQ     100  //1150 
+#define LEGO_FREQ     1150  //100 
 #define PWM_RES		    8
+
+#define MIN_FRONT_DISTANCE 20 // minimum distance - stop the car
 
 // Specific Motors pins of the Maker-ESP32-Pro board
 #define MOTOR_0_PIN_1	27
 #define MOTOR_0_PIN_2	13
-#define MOTOR_1_PIN_1	5
+#define MOTOR_1_PIN_1	4
 #define MOTOR_1_PIN_2	2
 #define MOTOR_2_PIN_1	17
 #define MOTOR_2_PIN_2	12
@@ -42,6 +45,9 @@
 #define SERVO_CH6  5
 #define SERVO_CH7  6
 #define SERVO_CH8  7
+
+// Sreering Hall Effect feedback sensor analog input
+#define STEERING_HALL_SENS_ANALOG_IN_PIN	34
 
 // DRAGON Wierless Controller for PS4 Controls Buttons Mapping
 #define WIRELESS_CONTROLLER_PS4_BUTTOMS_LOW_X					1
@@ -95,13 +101,22 @@ class HardwareControl {
 		void Set_DC_Motor_Speed(motor_t motorID, int speed);
 		void Stop_DC_Motor(motor_t motorID);
 
+		int Read_Analog_Input(uint8_t input_pin);
+
+		int Read_Steering_Hall_Sensor_Input(float filter = 0.f);
+
 		motor_t dc_motors[4];
 		
 	private:
 	
 		HardwareControl();
+
+		int prev_x_axis_val = 128;
+		int prev_y_axis_val = 128;
+		int prev_rx_axis_val = 128;
+		int prev_ry_axis_val = 128;
 	
-		
+		int front_dist = MIN_FRONT_DISTANCE + 10;
 	
 		static HardwareControl* hw_control_instance;
 };
