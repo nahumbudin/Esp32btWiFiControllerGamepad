@@ -39,32 +39,33 @@
 #include <ESP32Servo.h>
 
 #include "HardwareControl.h"
+#include "RGBledController.h"
 
 // Uncomment to test motors
 //#define TEST_MOTORS_EN
 
+// Uncomment to enable the use of the RGB LED
+//#define RGB_LED_ENABLE
+
 #define MODE_SELECT_PIN 5   // Connect to GND for WiFi mode, leave open (HIGH) for BT mode
-                            // for Wi-Fi mode
+                        
 bool isWifiMode = false;
 
 void control_task(void *pvParameters);
 
-
-// Unique GATT Profile UUID Layout Contract Constants
+// Unique BT GATT Profile UUID Layout Contract Constants
 #define SERVICE_UUID           "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID_RX "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define CHARACTERISTIC_UUID_TX "d2a3ca31-152c-474c-b5f6-c51e9e30a501"
 
-#define UNI_GAMEPAD_MAPPINGS_DPAD     100
-#define UNI_GAMEPAD_MAPPING_BUTTONS_L 101
-#define UNI_GAMEPAD_MAPPING_BUTTONS_H 102
-
+// US Distance Sensor
 int16_t dist = 2; // Distance in cm
 int16_t prev_dist = 2;     
 float temp = 20.0f;    // Temperature in °C
 float prev_temp = 20.0f;
 int us_dist_meas_cycle_count = 0;
 
+// BT Connection
 volatile bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
@@ -73,15 +74,21 @@ bool oldDeviceConnected = false;
 
 HardwareControl *hw_control;
 
-DFRobot_URM09 URM09; // US Distance sensor
+// RGB LED I2C controller (allocates only Mutex)
+#ifdef RGB_LED_ENABLE
+LP55231Controller leds(0x32); // I2C addr 0x32
+#endif
+
+// US Distance sensor
+DFRobot_URM09 URM09; 
 
 // Global queue to pass rx commands and parameters to the HW control tasks.
 QueueHandle_t rx_commands_queue = NULL;
 
 // Declare the Wi-Fi credentials and UDP parameters
-const char* ssid = "ESP32_Gamepad_Hotspot"; // Name your network
-const char* password = "gamepad12345";       // Password must be at least 8 characters
-const int tcp_port = 9999;                    // The port the app will send data to
+const char* ssid = "ESP32_Gamepad_Hotspot";     // Name your network
+const char* password = "gamepad12345";          // Password must be at least 8 characters
+const int tcp_port = 9999;                      // The port the app will send data to
 
 IPAddress local_IP(192, 168, 4, 1);
 IPAddress gateway(192, 168, 4, 1);
@@ -91,7 +98,7 @@ IPAddress subnet(255, 255, 255, 0);
 WiFiServer tcpServer(9999);
 WiFiClient tcpClient;
 
-// Global container arrays for tracking the controller pointers
+// Global container arrays for tracking the PS controller pointers
 ControllerPtr ps_controllers[BP32_MAX_GAMEPADS];
 
 // ---- Helper Function ---------
@@ -99,10 +106,17 @@ float limit(float v, float mn, float mx) { return (v < mn) ? mn : ((v > mx) ? mx
 
 void control_task(void *pvParameters) {
     rx_command_t new_command;
-    const TickType_t xInterval = pdMS_TO_TICKS(50); // 50 milliseconds
+    const TickType_t xInterval = pdMS_TO_TICKS(10); // 10 milliseconds Must be 1/HardwareControl.dt
+
+    //TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    // Initialize steering hall effect sensor filter with starting position
+    int filtered_adc = hw_control->Read_Steering_Hall_Sensor_Input(hw_control->FILTER_ALPHA);
 
     while (1) {
-        // Block for a MAXIMUM of 50ms waiting for data
+        // Wait precisely until the next 10ms cycle
+        //vTaskDelayUntil(&xLastWakeTime, xInterval);
+        // Do not block waiting for data
         if (xQueueReceive(rx_commands_queue, &new_command, xInterval) == pdPASS) {
             // Data arrived before the 50ms window closed!
             do {            
@@ -111,13 +125,13 @@ void control_task(void *pvParameters) {
             } while (xQueueReceive(rx_commands_queue, &new_command, 0) == pdPASS); // drain all
 
         } else {
-            // 50ms passed and NO data arrived. 
+            // 10ms passed and NO data arrived. 
             // The queue check safely timed out.
         }
 
-        // --- RUN YOUR PERIODIC CODE HERE ---
-        // This block will execute roughly every 50ms (or sooner if commands arrive)
-        // Example: Update motor PWM calculations, check battery voltage
+        // Update the steering position feedback.
+        filtered_adc = hw_control->Read_Steering_Hall_Sensor_Input(hw_control->FILTER_ALPHA);
+        hw_control->Commands_Processor(STEERING_HALL_EFFECT_SENSOR, filtered_adc);
     }
 }
 
@@ -136,6 +150,17 @@ void setup() {
     Serial.println("SEN0304 not found! Check wiring and I2C pins.");
     delay(1000);
   }
+
+  // Initialize I2C RGB LED Controller
+  #ifdef RGB_LED_ENABLE
+  if (!leds.begin(Wire, false, 21, 22)) { // Do not init I2C again
+        Serial.println("ERROR: LP55231 not found at 0x32! Check wiring.");
+        while (true) delay(1000);
+    }
+
+    leds.startTask();
+    leds.setPattern(LP55231Controller::RAINBOW);
+    #endif
 
   // Configure mode and maximum range:
   // Modes:  MEASURE_MODE_PASSIVE or MEASURE_MODE_AUTOMATIC
@@ -329,7 +354,7 @@ void loop() {
 #endif
 
     // Test Hall sensor inputdebug
-    int hall_read = hw_control->Read_Steering_Hall_Sensor_Input(0.1);
+    //int hall_read = hw_control->Read_Steering_Hall_Sensor_Input(0.1);
     //printf("Steering Hall Sensor Input: %i\n", hall_read);
 
     // Trigger a measurement (required only in MEASURE_MODE_PASSIVE)
@@ -347,6 +372,12 @@ void loop() {
     {
         dist = URM09.getDistance();     // Distance in cm
         temp = URM09.getTemperature();    // Temperature in °C
+    }
+
+    if (dist < 0)
+    {
+        // Out of range - dont't stop
+        dist = MIN_FRONT_DISTANCE + 10;
     }
 
     if ((dist != prev_dist) || (temp != prev_temp))

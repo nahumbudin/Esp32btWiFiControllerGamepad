@@ -23,7 +23,8 @@ const uint8_t cmd_map[COMMANDS_SIZE] = {
         UNI_GAMEPAD_MAPPING_BUTTONS_L,
         UNI_GAMEPAD_MAPPING_BUTTONS_H,
         US_SENSOR_DISTANCE,
-        US_SENSOR_TEMP
+        US_SENSOR_TEMP,
+        STEERING_HALL_EFFECT_SENSOR
     };
 
 // This callback gets called any time a new gamepad is connected.

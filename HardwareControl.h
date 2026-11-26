@@ -21,10 +21,20 @@
 //#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
 
 // CRITICAL LEGO CHANGE: Set frequency to 1150 Hz instead of 50 Hz
-#define LEGO_FREQ     1150  //100 
+#define LEGO_FREQ     20000  //100 
 #define PWM_RES		    8
 
 #define MIN_FRONT_DISTANCE 20 // minimum distance - stop the car
+
+// Set according to the actual transmission direction
+#define SPEED_DIRECTION -1
+
+// --- Calibration Values (MEASURE THESE FIRST) ---
+const int STEERING_ADC_LEFT_MAX = 1200;   // Raw ADC at full left (-128)
+const int STEERING_ADC_RIGHT_MAX = 2900;  // Raw ADC at full right (+128)
+
+#define DRIVE_MOTOR			0
+#define STEERING_MOTOR	1
 
 // Specific Motors pins of the Maker-ESP32-Pro board
 #define MOTOR_0_PIN_1	27
@@ -90,6 +100,8 @@ class HardwareControl {
 			int ch1;
 			int ch2;
 		};
+
+		const float FILTER_ALPHA = 0.25f;// EMA smoothing factor
 	
 		~HardwareControl();
 		
@@ -104,6 +116,7 @@ class HardwareControl {
 		int Read_Analog_Input(uint8_t input_pin);
 
 		int Read_Steering_Hall_Sensor_Input(float filter = 0.f);
+		int Calc_Stearing_Value(int feedback);
 
 		motor_t dc_motors[4];
 		
@@ -111,12 +124,30 @@ class HardwareControl {
 	
 		HardwareControl();
 
+		// --- Calibration Values (MEASURE THESE FIRST) ---
+		const int ADC_STEERING_HALL_SENS_LEFT_MAX = 1200;   // Raw ADC at full left (-128)
+		const int ADC_STEERING_HALL_SENS_RIGHT_MAX = 2900;  // Raw ADC at full right (+128)
+
 		int prev_x_axis_val = 128;
 		int prev_y_axis_val = 128;
 		int prev_rx_axis_val = 128;
 		int prev_ry_axis_val = 128;
 	
 		int front_dist = MIN_FRONT_DISTANCE + 10;
+
+		int speed = 0;
+		int last_speed = 0;
+
+		int steering_cmd = 0;
+		int steering_speed = 0;
+
+		// --- Steering PID Tuning Parameters ---
+		const float KP = 1.8f;
+		const float KD = 0.4f;
+		const int DEADBAND = 18;         // Allowed LEGO slop (ADC units)
+		const int MIN_PWM = 75;          // Minimum PWM to overcome worm gear friction
+		float last_error = 0.0f;
+		const float dt = 0.01f; 					// NOTE: must be 1/Control Task cycle period
 	
 		static HardwareControl* hw_control_instance;
 };
