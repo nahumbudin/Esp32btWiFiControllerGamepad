@@ -1,0 +1,187 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\cores\\esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\variants\\esp32"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "Preferences.h",
+    "Includepath": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\Preferences\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "DFRobot_URM09.h",
+    "Includepath": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\DFRobot_URM09"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "WiFi.h",
+    "Includepath": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "ESP32Servo.h",
+    "Includepath": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\ESP32Servo\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "lp55231.h",
+    "Includepath": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_LP55231_Breakout\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "SparkFun_Qwiic_Buzzer_Arduino_Library.h",
+    "Includepath": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Qwiic_Buzzer_Library\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "SparkFun_Toolkit.h",
+    "Includepath": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Toolkit\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Esp32btWiFiControllerGamepad_1.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\BluePad32handlers.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\Buzzer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\HardwareControl.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "I:\\Workspace\\ESP32\\Maker-ESP32-Pro\\Esp32btWiFiControllerGamepad_1\\build\\sketch\\RGBledController.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\Preferences\\src\\Preferences.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\DFRobot_URM09\\DFRobot_URM09.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFi.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiAP.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiGeneric.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiMulti.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiSTA.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiScan.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiServer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\WiFi\\src\\WiFiUdp.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\ESP32Servo\\src\\ESP32PWM.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\ESP32Servo\\src\\ESP32Servo.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_LP55231_Breakout\\src\\lp55231.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Qwiic_Buzzer_Library\\src\\sfTk\\sfDevBuzzer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Toolkit\\src\\sfTk\\sfToolkit.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Toolkit\\src\\sfTkArdI2C.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Toolkit\\src\\sfTkArdSPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "i:\\Workspace\\ESP32\\Maker-ESP32-Pro\\libraries\\SparkFun_Toolkit\\src\\sfTkArduino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\nahum\\AppData\\Local\\Arduino15\\packages\\esp32-bluepad32\\hardware\\esp32\\4.1.0\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]

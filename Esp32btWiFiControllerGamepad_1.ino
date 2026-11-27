@@ -41,11 +41,16 @@
 #include "HardwareControl.h"
 #include "RGBledController.h"
 
+#include "Buzzer.h"
+
 // Uncomment to test motors
 //#define TEST_MOTORS_EN
 
 // Uncomment to enable the use of the RGB LED
 //#define RGB_LED_ENABLE
+
+// Uncoment to enable the SparkFun Qwiic Buzzer
+//#define BUZZER_ENABLE
 
 #define MODE_SELECT_PIN 5   // Connect to GND for WiFi mode, leave open (HIGH) for BT mode
                         
@@ -160,7 +165,12 @@ void setup() {
 
     leds.startTask();
     leds.setPattern(LP55231Controller::RAINBOW);
-    #endif
+#endif
+
+// SparkFun Qwiic Buzzer object
+#ifdef BUZZER_ENABLE
+    Buzzer buzzer;
+#endif
 
   // Configure mode and maximum range:
   // Modes:  MEASURE_MODE_PASSIVE or MEASURE_MODE_AUTOMATIC
